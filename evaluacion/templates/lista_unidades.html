@@ -1,0 +1,46 @@
+<!-- myapp/templates/lista_unidades.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Unidades</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Unidades</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID Unidad</th>
+                <th>Nombre Unidad</th>
+                <th>Jefe Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for unidad in unidades %}
+                <tr>
+                    <td>{{ unidad.id_unidad }}</td>
+                    <td>{{ unidad.nombre_unidad }}</td>
+                    <td>{{ unidad.jefe_unidad }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No hay unidades disponibles.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
