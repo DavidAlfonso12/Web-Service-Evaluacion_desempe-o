@@ -61,6 +61,7 @@ class Detalle_empleado(viewsets.ViewSet):
             response_data = {
                 'empleado_nombre': competencias.first().componente.nombre_empleado,
                 'cargo': competencias.first().cargo,
+                'email': competencias.first().componente.email,
                 'fortaleza': competencias.first().fortaleza,
                 'promedio_valor': promedio_valor,
                 'foto_empleado': competencias.first().id_imagen.foto,

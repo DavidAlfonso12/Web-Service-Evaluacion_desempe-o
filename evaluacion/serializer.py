@@ -45,13 +45,14 @@ class CompetenciaSerializer(serializers.ModelSerializer):
 
 class Detalle_empleadoSerializer(serializers.ModelSerializer):
     empleado_nombre = serializers.CharField(source='componente.nombre_empleado', read_only=True)
+    empleado_email = serializers.EmailField(source='componente.email', read_only=True)
     promedio_valor = serializers.FloatField(read_only=True)
     foto_empleado = serializers.CharField(source='id_imagen.foto', read_only=True)
     competencias = CompetenciaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Competencia
-        fields = ['empleado_nombre', 'cargo', 'fortaleza','componente2','valor','promedio_valor','fecha','foto_empleado', 'competencias']
+        fields = ['empleado_nombre','empleado_email', 'cargo', 'fortaleza','componente2','valor','promedio_valor','fecha','foto_empleado', 'competencias']
 
 class competencia_unidadSerializer(serializers.ModelSerializer):
     promedio_competencias = serializers.SerializerMethodField()
