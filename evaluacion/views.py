@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from .models import Unidades, Empleados, Imagen, Competencia
 from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import AllowAny
+from django.utils import timezone
 
 class lista_unidades(viewsets.ModelViewSet):
     serializer_class = UnidadesSerializer
@@ -28,20 +29,38 @@ class lista_empleados_unidad(viewsets.ModelViewSet):
     serializer_class = Empleados_unidadSerializer
 
     def get_queryset(self):
-        unidad_id = self.request.query_params.get('nombre_unidad', None)  # Obtiene el ID de unidad desde los parámetros de la consulta
+        unidad_id = self.request.query_params.get('nombre_unidad', None)
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+
+        # Convertir las fechas de string a objeto datetime
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio = timezone.datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                fecha_fin = timezone.datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            except ValueError:
+                # Manejar error de conversión
+                return Competencia.objects.none()
+
+        competencias = Competencia.objects.all()
+
         if unidad_id is not None:
-            competencias = Competencia.objects.filter(unidad__nombre_unidad=unidad_id)
-            seen_empleados = set()
-            unique_competencias = []
+            competencias = competencias.filter(unidad__nombre_unidad=unidad_id)
 
-            for competencia in competencias:
-                empleado_nombre = competencia.componente.nombre_empleado
-                if empleado_nombre not in seen_empleados:
-                    seen_empleados.add(empleado_nombre)
-                    unique_competencias.append(competencia)
+        if fecha_inicio and fecha_fin:
+            competencias = competencias.filter(fecha__gte=fecha_inicio, fecha__lte=fecha_fin)
 
-            return unique_competencias  # Filtra por unidad
-        return Competencia.objects.all()
+        seen_empleados = set()
+        unique_competencias = []
+
+        for competencia in competencias:
+            empleado_nombre = competencia.componente.nombre_empleado
+            if empleado_nombre not in seen_empleados:
+                seen_empleados.add(empleado_nombre)
+                unique_competencias.append(competencia)
+
+        return unique_competencias
+
 
 class Detalle_empleado(viewsets.ViewSet):
     def list(self, request):
@@ -76,39 +95,86 @@ class competencias_unidad(viewsets.ModelViewSet):
 
     def get_queryset(self):
         id_unidad = self.request.query_params.get('id_unidad', None)
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio = timezone.datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                fecha_fin = timezone.datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            except ValueError:
+                return Competencia.objects.none()
+
         if id_unidad is not None:
-            seen = set()
-            # Filtra las competencias por el código del empleado
+            # Filtra las competencias por ID de unidad
             competencias = Competencia.objects.filter(unidad__nombre_unidad=id_unidad)
-            unique_unique_competencias = []
+
+            # Filtra por fechas si están presentes
+            if fecha_inicio and fecha_fin:
+                competencias = competencias.filter(fecha__gte=fecha_inicio, fecha__lte=fecha_fin)
+
+            # Guardamos competencias filtradas en un atributo
+            self.competencias_filtradas = competencias
+
+            seen = set()
+            unique_competencias = []
             for competencia in competencias:
                 if competencia.componente2 not in seen:
                     seen.add(competencia.componente2)
-                    unique_unique_competencias.append(competencia)
-            return unique_unique_competencias
-        return Competencia.objects.all() 
+                    unique_competencias.append(competencia)
+
+            return unique_competencias
+        
+        return Competencia.objects.all()
+
     
 class resultado_empleados_unidad(viewsets.ModelViewSet):
     serializer_class = resultado_empleados_unidad
 
     def get_queryset(self):
         nombre_unidad = self.request.query_params.get('nombre_unidad', None)
-        if nombre_unidad == '0':
-            return Competencia.objects.all()
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+
+        # Convertir las fechas de string a objeto datetime
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio = timezone.datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                fecha_fin = timezone.datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            except ValueError:
+                # Manejar error de conversión
+                return Competencia.objects.none()
+
+        competencias = Competencia.objects.all()
 
         if nombre_unidad is not None:
-            competencias = Competencia.objects.filter(unidad__nombre_unidad=nombre_unidad)
-            return competencias
-        
-        return Competencia.objects.all()  
+            competencias = competencias.filter(unidad__nombre_unidad=nombre_unidad)
+
+        if fecha_inicio and fecha_fin:
+            competencias = competencias.filter(fecha__gte=fecha_inicio, fecha__lte=fecha_fin)
+
+        return competencias
 
 class resumen_equipo(viewsets.ModelViewSet):
     serializer_class = Detalle_empleadoSerializer
 
     def get_queryset(self):
         nombre_unidad = self.request.query_params.get('nombre_unidad', None)
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+        
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio = timezone.datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                fecha_fin = timezone.datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            except ValueError:
+                # Manejar error de conversión
+                return Competencia.objects.none()
+        
         if nombre_unidad is not None:
             competencias = Competencia.objects.filter(unidad__nombre_unidad=nombre_unidad)
+            if fecha_inicio and fecha_fin:
+                competencias = competencias.filter(fecha__gte=fecha_inicio, fecha__lte=fecha_fin)
             seen = set()
             unique_unique_competencias = []
             for competencia in competencias:
@@ -116,6 +182,7 @@ class resumen_equipo(viewsets.ModelViewSet):
                     seen.add(competencia.componente.nombre_empleado)
                     unique_unique_competencias.append(competencia)
             return unique_unique_competencias
+        
         return Competencia.objects.all()
 
 class Empleados_evaluados(viewsets.ModelViewSet):

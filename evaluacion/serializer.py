@@ -56,17 +56,21 @@ class Detalle_empleadoSerializer(serializers.ModelSerializer):
 
 class competencia_unidadSerializer(serializers.ModelSerializer):
     promedio_competencias = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Competencia
-        fields = ['componente2', 'valor', 'promedio_competencias']
+        fields = ['componente2', 'fecha', 'promedio_competencias']
 
     def get_promedio_competencias(self, obj):
-        competencias = Competencia.objects.filter(componente2=obj)
-        if competencias.exists():
-            promedio = round(competencias.aggregate(models.Avg('valor'))['valor__avg'],2)
-            return promedio
+        # Acceder a las competencias filtradas desde la vista
+        view = self.context.get('view')
+        if hasattr(view, 'competencias_filtradas'):
+            competencias = view.competencias_filtradas.filter(componente2=obj.componente2)
+            if competencias.exists():
+                promedio = round(competencias.aggregate(models.Avg('valor'))['valor__avg'], 2)
+                return promedio
         return 0
+
 
 class resultado_empleados_unidad(serializers.ModelSerializer):
     empleado_nombre = serializers.CharField(source='componente.nombre_empleado', read_only=True)
