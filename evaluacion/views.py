@@ -15,7 +15,13 @@ from django.utils import timezone
 
 class lista_unidades(viewsets.ModelViewSet):
     serializer_class = UnidadesSerializer
-    queryset = Unidades.objects.all()
+
+    def get_queryset(self):
+        nombre_unidad = self.request.query_params.get('nombre_unidad', None)
+        queryset = Unidades.objects.all()
+        if nombre_unidad:
+            queryset = queryset.filter(nombre_unidad = nombre_unidad)
+        return queryset
 
 class lista_empleados(viewsets.ModelViewSet):
     serializer_class = EmpleadosSerializer
@@ -175,13 +181,8 @@ class resumen_equipo(viewsets.ModelViewSet):
             competencias = Competencia.objects.filter(unidad__nombre_unidad=nombre_unidad)
             if fecha_inicio and fecha_fin:
                 competencias = competencias.filter(fecha__gte=fecha_inicio, fecha__lte=fecha_fin)
-            seen = set()
-            unique_unique_competencias = []
-            for competencia in competencias:
-                if competencia.componente.nombre_empleado not in seen:
-                    seen.add(competencia.componente.nombre_empleado)
-                    unique_unique_competencias.append(competencia)
-            return unique_unique_competencias
+            
+            return competencias
         
         return Competencia.objects.all()
 
