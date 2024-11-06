@@ -1,7 +1,6 @@
 # myapp/views.py
 from .serializer import UnidadesSerializer, EmpleadosSerializer, ImagenSerializer, Detalle_empleadoSerializer, Empleados_unidadSerializer, competencia_unidadSerializer, resultado_empleados_unidad, Empleados_evaluadosSerializer, CompetenciaSerializer, EmpleadoSerializer, Capacitandoce_mesSerializer,EmpleadoDetailSerializer
 from django.db.models import Avg
-from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import viewsets
 from django.db import models
